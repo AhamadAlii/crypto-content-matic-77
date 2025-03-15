@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,6 +20,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { VideoConfig, NewsArticle, GeneratedVideo } from '@/types';
 import { toast } from '@/components/ui/use-toast';
+import { generateVideo } from '@/utils/videoService';
 
 interface VideoGeneratorProps {
   selectedArticles: NewsArticle[];
@@ -58,7 +58,7 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ selectedArticles, onVid
     setVideoConfig(prev => ({ ...prev, style: value as 'professional' | 'casual' | 'dramatic' }));
   };
 
-  const simulateVideoGeneration = () => {
+  const handleVideoGeneration = async () => {
     if (selectedArticles.length === 0) {
       toast({
         title: "No articles selected",
@@ -71,47 +71,44 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ selectedArticles, onVid
     setIsGenerating(true);
     setGenerationProgress(0);
     
-    // Simulate progress
+    // Simulate progress while the real generation happens
     const interval = setInterval(() => {
       setGenerationProgress(prev => {
         const newProgress = prev + Math.random() * 10;
-        if (newProgress >= 100) {
+        if (newProgress >= 90) {
           clearInterval(interval);
-          generateCompleteVideo();
-          return 100;
+          return 90;
         }
         return newProgress;
       });
     }, 500);
-  };
 
-  const generateCompleteVideo = () => {
-    setTimeout(() => {
-      const newVideo: GeneratedVideo = {
-        id: `video-${Date.now()}`,
-        title: videoConfig.title,
-        description: videoConfig.description,
-        thumbnailUrl: selectedArticles[0]?.imageUrl || 'https://via.placeholder.com/640x360?text=Crypto+News',
-        videoUrl: '#', // In a real app, this would be a URL to the generated video
-        createdAt: new Date().toISOString(),
-        duration: videoConfig.duration,
-        hashtags: ['crypto', 'cryptocurrency', 'bitcoin', 'blockchain', 'news'],
-        status: 'completed',
-        socialPlatforms: {
-          twitter: true,
-          youtube: false,
-          tiktok: false,
-          instagram: false
-        }
-      };
+    try {
+      // Use the real video generation service
+      const generatedVideo = await generateVideo(videoConfig);
       
-      onVideoGenerated(newVideo);
-      setIsGenerating(false);
+      // Set progress to 100% when complete
+      setGenerationProgress(100);
+      clearInterval(interval);
+      
+      onVideoGenerated(generatedVideo);
+      
       toast({
         title: "Video generated successfully",
         description: "Your video is now ready to be shared.",
       });
-    }, 1000);
+    } catch (error) {
+      console.error("Error generating video:", error);
+      toast({
+        title: "Error generating video",
+        description: "An error occurred while generating the video. Please try again.",
+        variant: "destructive",
+      });
+      
+      clearInterval(interval);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -241,7 +238,7 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ selectedArticles, onVid
         <Button 
           className="w-full"
           disabled={isGenerating || selectedArticles.length === 0}
-          onClick={simulateVideoGeneration}
+          onClick={handleVideoGeneration}
         >
           {isGenerating ? 'Generating...' : (
             <>
