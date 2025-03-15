@@ -12,7 +12,7 @@ interface PlatformSelectorProps {
     youtube: boolean;
     instagram: boolean;
   };
-  handlePlatformChange: (platform: keyof typeof platforms) => void;
+  handlePlatformChange: (platform: 'twitter' | 'youtube' | 'instagram') => void;
   isDisabled: boolean;
   postResults: Record<string, SocialPostResult>;
 }
