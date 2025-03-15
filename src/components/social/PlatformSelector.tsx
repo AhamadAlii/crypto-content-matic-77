@@ -26,6 +26,7 @@ const PlatformSelector: React.FC<PlatformSelectorProps> = ({ platforms, handlePl
           <div className="flex items-center gap-2">
             <Twitter className="h-5 w-5 text-[#1DA1F2]" />
             <span>Twitter</span>
+            <Badge variant="outline" className="text-xs">Mock</Badge>
           </div>
           <Switch 
             checked={platforms.twitter} 
@@ -43,6 +44,7 @@ const PlatformSelector: React.FC<PlatformSelectorProps> = ({ platforms, handlePl
           <div className="flex items-center gap-2">
             <Youtube className="h-5 w-5 text-[#FF0000]" />
             <span>YouTube</span>
+            <Badge variant="outline" className="text-xs">Mock</Badge>
           </div>
           <Switch 
             checked={platforms.youtube} 
@@ -60,6 +62,7 @@ const PlatformSelector: React.FC<PlatformSelectorProps> = ({ platforms, handlePl
           <div className="flex items-center gap-2">
             <Instagram className="h-5 w-5 text-[#E1306C]" />
             <span>Instagram</span>
+            <Badge variant="outline" className="text-xs">Mock</Badge>
           </div>
           <Switch 
             checked={platforms.instagram} 

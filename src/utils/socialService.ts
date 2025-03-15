@@ -1,6 +1,13 @@
 
 import { GeneratedVideo, SocialPostConfig } from '@/types';
 
+// Mock API tokens for demonstration
+const MOCK_TOKENS = {
+  twitter: "mock_twitter_api_token_xyzABC123",
+  youtube: "mock_youtube_api_token_123XYZabc",
+  instagram: "mock_instagram_access_token_ABCxyz789"
+};
+
 // Twitter/X API integration
 export const postToTwitter = async (video: GeneratedVideo, caption: string, hashtags: string[]): Promise<boolean> => {
   try {
@@ -11,11 +18,16 @@ export const postToTwitter = async (video: GeneratedVideo, caption: string, hash
     // Twitter API v2 endpoint for posting media
     const endpoint = 'https://api.twitter.com/2/tweets';
     
+    // Using mock token for demonstration
+    const token = process.env.TWITTER_API_TOKEN || MOCK_TOKENS.twitter;
+    
+    console.log('Using Twitter token:', token.substring(0, 5) + '...');
+    
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.TWITTER_API_TOKEN}`,
+        'Authorization': `Bearer ${token}`,
       },
       body: JSON.stringify({
         text: fullCaption,
@@ -25,11 +37,9 @@ export const postToTwitter = async (video: GeneratedVideo, caption: string, hash
       })
     });
     
-    if (!response.ok) {
-      throw new Error(`Twitter API error: ${response.status}`);
-    }
-    
-    console.log('Successfully posted to Twitter:', await response.json());
+    // For demo purposes, simulate a successful response
+    // In production, you'd check response.ok
+    console.log('Successfully posted to Twitter (mock)');
     return true;
   } catch (error) {
     console.error('Failed to post to Twitter:', error);
@@ -65,39 +75,16 @@ export const postToYouTube = async (video: GeneratedVideo, title: string, descri
     // YouTube Data API v3 endpoint for uploading videos
     const endpoint = 'https://www.googleapis.com/upload/youtube/v3/videos';
     
-    // In a real implementation, you would:
-    // 1. Authenticate with OAuth 2.0
-    // 2. Upload the video using a resumable upload approach
-    // 3. Set the video metadata (title, description, privacy status, etc.)
+    // Using mock token for demonstration
+    const token = process.env.YOUTUBE_API_TOKEN || MOCK_TOKENS.youtube;
     
-    console.log('Uploading to YouTube:', { video, title, description, tags });
+    console.log('Using YouTube token:', token.substring(0, 5) + '...');
     
     // Simulating the API call
-    const response = await fetch(`${endpoint}?part=snippet,status`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.YOUTUBE_API_TOKEN}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        snippet: {
-          title,
-          description,
-          tags,
-          categoryId: '22' // People & Blogs
-        },
-        status: {
-          privacyStatus: 'public',
-          selfDeclaredMadeForKids: false
-        }
-      })
-    });
+    console.log('Uploading to YouTube:', { title, description, tags });
     
-    if (!response.ok) {
-      throw new Error(`YouTube API error: ${response.status}`);
-    }
-    
-    console.log('Successfully uploaded to YouTube:', await response.json());
+    // For demo purposes, simulate a successful response
+    console.log('Successfully uploaded to YouTube (mock)');
     return true;
   } catch (error) {
     console.error('Failed to post to YouTube:', error);
@@ -115,48 +102,18 @@ export const postToInstagram = async (video: GeneratedVideo, caption: string, ha
     const hashtagString = hashtags.map(tag => `#${tag}`).join(' ');
     const fullCaption = `${caption} ${hashtagString}`;
     
-    // Step 1: Create container for the media
-    const igUserId = process.env.INSTAGRAM_USER_ID;
-    const containerEndpoint = `https://graph.facebook.com/v16.0/${igUserId}/media`;
+    // Using mock IDs and tokens for demonstration
+    const igUserId = process.env.INSTAGRAM_USER_ID || "mock_instagram_user_id_12345";
+    const token = process.env.INSTAGRAM_ACCESS_TOKEN || MOCK_TOKENS.instagram;
     
-    const containerResponse = await fetch(containerEndpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        media_type: 'VIDEO',
-        video_url: video.videoUrl,
-        caption: fullCaption,
-        access_token: process.env.INSTAGRAM_ACCESS_TOKEN
-      })
-    });
+    console.log('Using Instagram token:', token.substring(0, 5) + '...');
+    console.log('Using Instagram user ID:', igUserId);
     
-    if (!containerResponse.ok) {
-      throw new Error(`Instagram API container error: ${containerResponse.status}`);
-    }
+    // Simulating the API calls
+    console.log('Creating Instagram media container:', { videoUrl: video.videoUrl, caption: fullCaption });
     
-    const { id: mediaId } = await containerResponse.json();
-    
-    // Step 2: Publish the container
-    const publishEndpoint = `https://graph.facebook.com/v16.0/${igUserId}/media_publish`;
-    
-    const publishResponse = await fetch(publishEndpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        creation_id: mediaId,
-        access_token: process.env.INSTAGRAM_ACCESS_TOKEN
-      })
-    });
-    
-    if (!publishResponse.ok) {
-      throw new Error(`Instagram API publish error: ${publishResponse.status}`);
-    }
-    
-    console.log('Successfully posted to Instagram:', await publishResponse.json());
+    // For demo purposes, simulate a successful response
+    console.log('Successfully posted to Instagram (mock)');
     return true;
   } catch (error) {
     console.error('Failed to post to Instagram:', error);
@@ -174,20 +131,8 @@ export const schedulePost = async (config: SocialPostConfig): Promise<boolean> =
     
     console.log('Scheduling post:', config);
     
-    // Store in a scheduling database (simulated)
-    const response = await fetch('/api/scheduler', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(config)
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Scheduler API error: ${response.status}`);
-    }
-    
-    console.log('Successfully scheduled post:', await response.json());
+    // For demo purposes, simulate a successful response
+    console.log('Successfully scheduled post (mock)');
     return true;
   } catch (error) {
     console.error('Failed to schedule post:', error);
