@@ -28,16 +28,18 @@ const PlatformSelector: React.FC<PlatformSelectorProps> = ({ platforms, handlePl
             <span>Twitter</span>
             <Badge variant="outline" className="text-xs">Mock</Badge>
           </div>
-          <Switch 
-            checked={platforms.twitter} 
-            onCheckedChange={() => handlePlatformChange('twitter')}
-            disabled={isDisabled}
-          />
-          {postResults.twitter && (
-            <Badge variant={postResults.twitter.success ? "outline" : "destructive"} className="ml-2 text-xs">
-              {postResults.twitter.success ? "Posted" : "Failed"}
-            </Badge>
-          )}
+          <div className="flex items-center">
+            {postResults.twitter && (
+              <Badge variant={postResults.twitter.success ? "outline" : "destructive"} className="mr-2 text-xs">
+                {postResults.twitter.success ? "Posted" : "Failed"}
+              </Badge>
+            )}
+            <Switch 
+              checked={platforms.twitter} 
+              onCheckedChange={() => handlePlatformChange('twitter')}
+              disabled={isDisabled}
+            />
+          </div>
         </div>
         
         <div className="flex items-center justify-between p-3 rounded-lg bg-black/5 dark:bg-white/5">
@@ -46,16 +48,18 @@ const PlatformSelector: React.FC<PlatformSelectorProps> = ({ platforms, handlePl
             <span>YouTube</span>
             <Badge variant="outline" className="text-xs">Mock</Badge>
           </div>
-          <Switch 
-            checked={platforms.youtube} 
-            onCheckedChange={() => handlePlatformChange('youtube')}
-            disabled={isDisabled}
-          />
-          {postResults.youtube && (
-            <Badge variant={postResults.youtube.success ? "outline" : "destructive"} className="ml-2 text-xs">
-              {postResults.youtube.success ? "Posted" : "Failed"}
-            </Badge>
-          )}
+          <div className="flex items-center">
+            {postResults.youtube && (
+              <Badge variant={postResults.youtube.success ? "outline" : "destructive"} className="mr-2 text-xs">
+                {postResults.youtube.success ? "Posted" : "Failed"}
+              </Badge>
+            )}
+            <Switch 
+              checked={platforms.youtube} 
+              onCheckedChange={() => handlePlatformChange('youtube')}
+              disabled={isDisabled}
+            />
+          </div>
         </div>
         
         <div className="flex items-center justify-between p-3 rounded-lg bg-black/5 dark:bg-white/5">
@@ -64,16 +68,18 @@ const PlatformSelector: React.FC<PlatformSelectorProps> = ({ platforms, handlePl
             <span>Instagram</span>
             <Badge variant="outline" className="text-xs">Mock</Badge>
           </div>
-          <Switch 
-            checked={platforms.instagram} 
-            onCheckedChange={() => handlePlatformChange('instagram')}
-            disabled={isDisabled}
-          />
-          {postResults.instagram && (
-            <Badge variant={postResults.instagram.success ? "outline" : "destructive"} className="ml-2 text-xs">
-              {postResults.instagram.success ? "Posted" : "Failed"}
-            </Badge>
-          )}
+          <div className="flex items-center">
+            {postResults.instagram && (
+              <Badge variant={postResults.instagram.success ? "outline" : "destructive"} className="mr-2 text-xs">
+                {postResults.instagram.success ? "Posted" : "Failed"}
+              </Badge>
+            )}
+            <Switch 
+              checked={platforms.instagram} 
+              onCheckedChange={() => handlePlatformChange('instagram')}
+              disabled={isDisabled}
+            />
+          </div>
         </div>
       </div>
     </div>

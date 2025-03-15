@@ -18,8 +18,8 @@ export const postToTwitter = async (video: GeneratedVideo, caption: string, hash
     // Twitter API v2 endpoint for posting media
     const endpoint = 'https://api.twitter.com/2/tweets';
     
-    // Using mock token for demonstration
-    const token = process.env.TWITTER_API_TOKEN || MOCK_TOKENS.twitter;
+    // Using mock token for demonstration - avoid using process.env in browser
+    const token = MOCK_TOKENS.twitter;
     
     console.log('Using Twitter token:', token.substring(0, 5) + '...');
     
@@ -75,8 +75,8 @@ export const postToYouTube = async (video: GeneratedVideo, title: string, descri
     // YouTube Data API v3 endpoint for uploading videos
     const endpoint = 'https://www.googleapis.com/upload/youtube/v3/videos';
     
-    // Using mock token for demonstration
-    const token = process.env.YOUTUBE_API_TOKEN || MOCK_TOKENS.youtube;
+    // Using mock token for demonstration - avoid using process.env in browser
+    const token = MOCK_TOKENS.youtube;
     
     console.log('Using YouTube token:', token.substring(0, 5) + '...');
     
@@ -102,9 +102,9 @@ export const postToInstagram = async (video: GeneratedVideo, caption: string, ha
     const hashtagString = hashtags.map(tag => `#${tag}`).join(' ');
     const fullCaption = `${caption} ${hashtagString}`;
     
-    // Using mock IDs and tokens for demonstration
-    const igUserId = process.env.INSTAGRAM_USER_ID || "mock_instagram_user_id_12345";
-    const token = process.env.INSTAGRAM_ACCESS_TOKEN || MOCK_TOKENS.instagram;
+    // Using mock IDs and tokens for demonstration - avoid using process.env in browser
+    const igUserId = "mock_instagram_user_id_12345";
+    const token = MOCK_TOKENS.instagram;
     
     console.log('Using Instagram token:', token.substring(0, 5) + '...');
     console.log('Using Instagram user ID:', igUserId);
