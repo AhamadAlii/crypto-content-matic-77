@@ -68,7 +68,7 @@ const VideoPreview: React.FC<VideoPreviewProps> = ({ video }) => {
             </span>
             <Button 
               size="sm" 
-              variant="outline" 
+              variant="default" 
               className="ml-auto mt-2 md:mt-0"
               onClick={handleDownload}
               disabled={isDownloading}

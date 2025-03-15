@@ -10,7 +10,7 @@ import {
   RefreshCw, 
   ChevronRight, 
   Video, 
-  Share,
+  Download,
   Search,
   TrendingUp
 } from 'lucide-react';
@@ -74,7 +74,7 @@ const Index = () => {
 
   const handleVideoGenerated = (video: GeneratedVideo) => {
     setGeneratedVideo(video);
-    setCurrentTab('share');
+    setCurrentTab('download');
   };
 
   return (
@@ -93,7 +93,7 @@ const Index = () => {
                 Crypto Content<span className="font-light">Matic</span>
               </h1>
               <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                Automatically generate engaging crypto news videos using AI and share them across your social media
+                Automatically generate engaging crypto news videos using AI
               </p>
             </div>
             
@@ -113,9 +113,9 @@ const Index = () => {
                     <Video className="h-4 w-4" />
                     <span className="hidden md:inline">Create Video</span>
                   </TabsTrigger>
-                  <TabsTrigger value="share" className="flex items-center gap-2 px-4" disabled={!generatedVideo}>
-                    <Share className="h-4 w-4" />
-                    <span className="hidden md:inline">Share</span>
+                  <TabsTrigger value="download" className="flex items-center gap-2 px-4" disabled={!generatedVideo}>
+                    <Download className="h-4 w-4" />
+                    <span className="hidden md:inline">Download</span>
                   </TabsTrigger>
                 </TabsList>
               </div>
@@ -203,10 +203,10 @@ const Index = () => {
                 </div>
               </TabsContent>
               
-              <TabsContent value="share" className="animate-fade-in mt-8">
+              <TabsContent value="download" className="animate-fade-in mt-8">
                 <div className="flex items-center gap-2 mb-6">
-                  <Share className="h-5 w-5 text-primary" />
-                  <h2 className="text-2xl font-semibold">Share Your Crypto Video</h2>
+                  <Download className="h-5 w-5 text-primary" />
+                  <h2 className="text-2xl font-semibold">Download Your Crypto Video</h2>
                 </div>
                 
                 {generatedVideo ? (
