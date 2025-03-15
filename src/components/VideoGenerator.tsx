@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,7 +16,8 @@ import {
   Mic, 
   Image as ImageIcon,
   RefreshCw,
-  CheckCheck 
+  CheckCheck,
+  Newspaper
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { VideoConfig, NewsArticle, GeneratedVideo } from '@/types';
@@ -95,13 +97,13 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ selectedArticles, onVid
       
       toast({
         title: "Video generated successfully",
-        description: "Your video is now ready to be shared.",
+        description: "Your news video is now ready to be shared.",
       });
     } catch (error) {
       console.error("Error generating video:", error);
       toast({
         title: "Error generating video",
-        description: "An error occurred while generating the video. Please try again.",
+        description: "An error occurred while generating the news video. Please try again.",
         variant: "destructive",
       });
       
@@ -116,9 +118,9 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ selectedArticles, onVid
       <CardHeader>
         <div className="flex items-center gap-2">
           <Film className="w-5 h-5 text-primary" />
-          <CardTitle>Video Generator</CardTitle>
+          <CardTitle>News Video Generator</CardTitle>
         </div>
-        <CardDescription>Create engaging videos from selected news articles</CardDescription>
+        <CardDescription>Transform selected news articles into engaging videos</CardDescription>
       </CardHeader>
       
       <CardContent className="space-y-6">
@@ -144,6 +146,27 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ selectedArticles, onVid
             onChange={handleChange} 
             disabled={isGenerating}
           />
+        </div>
+
+        <div className="bg-black/5 dark:bg-white/5 p-4 rounded-lg">
+          <div className="flex items-center gap-2 mb-3">
+            <Newspaper className="w-4 h-4 text-primary" />
+            <h3 className="font-medium">Selected News Articles</h3>
+          </div>
+          <div className="space-y-2 text-sm">
+            {selectedArticles.length > 0 ? (
+              selectedArticles.map((article, index) => (
+                <div key={article.id} className="flex items-center gap-2">
+                  <span className="bg-primary/10 text-primary w-5 h-5 rounded-full flex items-center justify-center text-xs">
+                    {index + 1}
+                  </span>
+                  <p className="line-clamp-1">{article.title}</p>
+                </div>
+              ))
+            ) : (
+              <p className="text-muted-foreground">No articles selected. Please go back and select some news.</p>
+            )}
+          </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -243,7 +266,7 @@ const VideoGenerator: React.FC<VideoGeneratorProps> = ({ selectedArticles, onVid
           {isGenerating ? 'Generating...' : (
             <>
               <Sparkles className="mr-2 h-4 w-4" />
-              Generate Video
+              Generate News Video
             </>
           )}
         </Button>
