@@ -48,3 +48,10 @@ export interface SocialPostConfig {
   hashtags?: string[];
   videoId: string;
 }
+
+export interface SocialPostResult {
+  success: boolean;
+  message: string;
+  postId?: string;
+  postUrl?: string;
+}

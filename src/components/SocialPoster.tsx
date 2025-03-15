@@ -13,8 +13,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { X, Share, CalendarIcon, Plus, Twitter, Youtube, Instagram, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { GeneratedVideo, SocialPostConfig } from '@/types';
+import { GeneratedVideo, SocialPostConfig, SocialPostResult } from '@/types';
 import { toast } from '@/components/ui/use-toast';
+import { postToTwitter, postToYouTube, postToInstagram, schedulePost } from '@/utils/socialService';
 
 interface SocialPosterProps {
   video: GeneratedVideo;
@@ -25,7 +26,9 @@ const SocialPoster: React.FC<SocialPosterProps> = ({ video }) => {
   const [hashtags, setHashtags] = useState<string[]>(video.hashtags || ['crypto', 'news', 'bitcoin']);
   const [newHashtag, setNewHashtag] = useState<string>('');
   const [date, setDate] = React.useState<Date | undefined>(new Date());
+  const [time, setTime] = useState<string>("12:00");
   const [isPosting, setIsPosting] = useState(false);
+  const [postResults, setPostResults] = useState<Record<string, SocialPostResult>>({});
   const [platforms, setPlatforms] = useState({
     twitter: true,
     youtube: false,
@@ -57,7 +60,11 @@ const SocialPoster: React.FC<SocialPosterProps> = ({ video }) => {
     }
   };
 
-  const simulatePosting = () => {
+  const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTime(e.target.value);
+  };
+
+  const handlePostNow = async () => {
     if (!Object.values(platforms).some(value => value)) {
       toast({
         title: "No platform selected",
@@ -68,14 +75,152 @@ const SocialPoster: React.FC<SocialPosterProps> = ({ video }) => {
     }
     
     setIsPosting(true);
+    const results: Record<string, SocialPostResult> = {};
     
-    setTimeout(() => {
-      setIsPosting(false);
+    try {
+      // Post to selected platforms
+      if (platforms.twitter) {
+        const success = await postToTwitter(video, caption, hashtags);
+        results.twitter = { 
+          success, 
+          message: success ? "Posted successfully to Twitter" : "Failed to post to Twitter" 
+        };
+      }
+      
+      if (platforms.youtube) {
+        const success = await postToYouTube(video, video.title, caption, hashtags);
+        results.youtube = { 
+          success, 
+          message: success ? "Posted successfully to YouTube" : "Failed to post to YouTube" 
+        };
+      }
+      
+      if (platforms.instagram) {
+        const success = await postToInstagram(video, caption, hashtags);
+        results.instagram = { 
+          success, 
+          message: success ? "Posted successfully to Instagram" : "Failed to post to Instagram" 
+        };
+      }
+      
+      setPostResults(results);
+      
+      // Show toast with results
+      const successCount = Object.values(results).filter(r => r.success).length;
+      const totalCount = Object.values(results).length;
+      
+      if (successCount === totalCount) {
+        toast({
+          title: "Posted successfully",
+          description: `Your video has been posted to ${successCount} platform${successCount !== 1 ? 's' : ''}.`,
+        });
+      } else if (successCount > 0) {
+        toast({
+          title: "Partially successful",
+          description: `Posted to ${successCount}/${totalCount} platforms. Check results for details.`,
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Posting failed",
+          description: "Failed to post to any platform. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error posting content:", error);
       toast({
-        title: "Content scheduled successfully",
-        description: "Your video will be posted at the scheduled time.",
+        title: "Error",
+        description: "An unexpected error occurred while posting.",
+        variant: "destructive",
       });
-    }, 2000);
+    } finally {
+      setIsPosting(false);
+    }
+  };
+
+  const handleSchedulePost = async () => {
+    if (!Object.values(platforms).some(value => value)) {
+      toast({
+        title: "No platform selected",
+        description: "Please select at least one social media platform.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!date) {
+      toast({
+        title: "No date selected",
+        description: "Please select a date for scheduling.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsPosting(true);
+    
+    try {
+      // Create a Date object for the scheduled time
+      const scheduledDate = new Date(date);
+      const [hours, minutes] = time.split(':').map(Number);
+      scheduledDate.setHours(hours, minutes, 0, 0);
+      
+      // Ensure the scheduled time is in the future
+      if (scheduledDate <= new Date()) {
+        toast({
+          title: "Invalid scheduling time",
+          description: "The scheduled time must be in the future.",
+          variant: "destructive",
+        });
+        setIsPosting(false);
+        return;
+      }
+      
+      const platforms = [];
+      if (platforms.twitter) platforms.push('twitter');
+      if (platforms.youtube) platforms.push('youtube');
+      if (platforms.instagram) platforms.push('instagram');
+      
+      // Schedule posts for each platform
+      const schedulingPromises = Object.entries(platforms)
+        .filter(([_, enabled]) => enabled)
+        .map(([platform]) => {
+          const config: SocialPostConfig = {
+            platformId: platform as any,
+            scheduledTime: scheduledDate.toISOString(),
+            caption,
+            hashtags,
+            videoId: video.id,
+          };
+          
+          return schedulePost(config);
+        });
+      
+      const results = await Promise.all(schedulingPromises);
+      
+      if (results.every(Boolean)) {
+        toast({
+          title: "Scheduled successfully",
+          description: `Your video will be posted at ${format(scheduledDate, 'PPP')} at ${time}.`,
+        });
+      } else {
+        toast({
+          title: "Scheduling partially failed",
+          description: "Some platforms could not be scheduled. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error scheduling posts:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while scheduling.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsPosting(false);
+    }
   };
 
   return (
@@ -89,6 +234,7 @@ const SocialPoster: React.FC<SocialPosterProps> = ({ video }) => {
       </CardHeader>
       
       <CardContent className="space-y-6">
+        {/* Video preview section */}
         <div className="bg-black/5 dark:bg-white/5 rounded-lg p-4 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent bg-shimmer"></div>
           <div className="flex md:items-center gap-4 md:flex-row flex-col">
@@ -117,6 +263,7 @@ const SocialPoster: React.FC<SocialPosterProps> = ({ video }) => {
           </div>
         </div>
         
+        {/* Caption section */}
         <div className="space-y-3">
           <Label htmlFor="caption">Caption</Label>
           <Textarea 
@@ -129,6 +276,7 @@ const SocialPoster: React.FC<SocialPosterProps> = ({ video }) => {
           />
         </div>
         
+        {/* Hashtags section */}
         <div className="space-y-3">
           <Label>Hashtags</Label>
           <div className="flex flex-wrap gap-2 mb-2">
@@ -168,6 +316,7 @@ const SocialPoster: React.FC<SocialPosterProps> = ({ video }) => {
         
         <Separator />
         
+        {/* Schedule section */}
         <div className="space-y-4">
           <Label>Schedule Post</Label>
           <div className="flex items-center gap-4">
@@ -199,7 +348,8 @@ const SocialPoster: React.FC<SocialPosterProps> = ({ video }) => {
             <Input
               type="time"
               className="glass-input w-32"
-              defaultValue="12:00"
+              value={time}
+              onChange={handleTimeChange}
               disabled={isPosting}
             />
           </div>
@@ -207,6 +357,7 @@ const SocialPoster: React.FC<SocialPosterProps> = ({ video }) => {
         
         <Separator />
         
+        {/* Platforms section */}
         <div className="space-y-3">
           <Label>Platforms</Label>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -220,6 +371,11 @@ const SocialPoster: React.FC<SocialPosterProps> = ({ video }) => {
                 onCheckedChange={() => handlePlatformChange('twitter')}
                 disabled={isPosting}
               />
+              {postResults.twitter && (
+                <Badge variant={postResults.twitter.success ? "outline" : "destructive"} className="ml-2 text-xs">
+                  {postResults.twitter.success ? "Posted" : "Failed"}
+                </Badge>
+              )}
             </div>
             
             <div className="flex items-center justify-between p-3 rounded-lg bg-black/5 dark:bg-white/5">
@@ -232,6 +388,11 @@ const SocialPoster: React.FC<SocialPosterProps> = ({ video }) => {
                 onCheckedChange={() => handlePlatformChange('youtube')}
                 disabled={isPosting}
               />
+              {postResults.youtube && (
+                <Badge variant={postResults.youtube.success ? "outline" : "destructive"} className="ml-2 text-xs">
+                  {postResults.youtube.success ? "Posted" : "Failed"}
+                </Badge>
+              )}
             </div>
             
             <div className="flex items-center justify-between p-3 rounded-lg bg-black/5 dark:bg-white/5">
@@ -244,16 +405,31 @@ const SocialPoster: React.FC<SocialPosterProps> = ({ video }) => {
                 onCheckedChange={() => handlePlatformChange('instagram')}
                 disabled={isPosting}
               />
+              {postResults.instagram && (
+                <Badge variant={postResults.instagram.success ? "outline" : "destructive"} className="ml-2 text-xs">
+                  {postResults.instagram.success ? "Posted" : "Failed"}
+                </Badge>
+              )}
             </div>
           </div>
         </div>
       </CardContent>
       
-      <CardFooter>
+      <CardFooter className="flex flex-col sm:flex-row gap-3">
         <Button 
           className="w-full"
           disabled={isPosting || !Object.values(platforms).some(value => value)}
-          onClick={simulatePosting}
+          onClick={handlePostNow}
+          variant="default"
+        >
+          {isPosting ? 'Posting...' : 'Post Now'}
+        </Button>
+        
+        <Button 
+          className="w-full"
+          disabled={isPosting || !Object.values(platforms).some(value => value)}
+          onClick={handleSchedulePost}
+          variant="outline"
         >
           {isPosting ? 'Scheduling...' : (
             <>
