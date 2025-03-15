@@ -114,3 +114,61 @@ export const generateThumbnail = async (videoId: string, imageUrl: string): Prom
   
   return imageUrl;
 };
+
+// Function to download the generated video
+export const downloadVideo = async (video: GeneratedVideo): Promise<boolean> => {
+  try {
+    // In a real application, this would download the actual video file
+    // For this demo, we'll create a mock MP4 blob
+    
+    // Simulate download delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Create a canvas to generate a simple video frame
+    const canvas = document.createElement('canvas');
+    canvas.width = 640;
+    canvas.height = 360;
+    const ctx = canvas.getContext('2d');
+    
+    if (ctx) {
+      // Create a gradient background
+      const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      gradient.addColorStop(0, '#121212');
+      gradient.addColorStop(1, '#2a2a2a');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Add video title
+      ctx.font = 'bold 24px Arial';
+      ctx.fillStyle = 'white';
+      ctx.textAlign = 'center';
+      ctx.fillText(video.title, canvas.width / 2, canvas.height / 2);
+      
+      // Add crypto mentions
+      ctx.font = '16px Arial';
+      ctx.fillText('Generated with CryptoContentMatic', canvas.width / 2, canvas.height / 2 + 40);
+    }
+    
+    // Convert canvas to blob
+    const blob = await new Promise<Blob>((resolve) => {
+      canvas.toBlob((blob) => {
+        resolve(blob || new Blob(['Video content'], { type: 'video/mp4' }));
+      }, 'image/png');
+    });
+    
+    // Create download link
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${video.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${video.id}.mp4`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    return true;
+  } catch (error) {
+    console.error('Error downloading video:', error);
+    return false;
+  }
+};
