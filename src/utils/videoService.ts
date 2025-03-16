@@ -121,60 +121,28 @@ export const downloadVideo = async (video: GeneratedVideo): Promise<boolean> => 
     console.log('Starting download for video:', video.title);
     
     // In a real application, this would download the actual video file
-    // For this demo, we'll create a mock MP4 blob
+    // For this demo, we'll create a mock MP4 file
     
     // Simulate download delay
     await new Promise(resolve => setTimeout(resolve, 1500));
     
-    // Create a canvas to generate a simple video frame
-    const canvas = document.createElement('canvas');
-    canvas.width = 640;
-    canvas.height = 360;
-    const ctx = canvas.getContext('2d');
-    
-    if (ctx) {
-      // Create a gradient background
-      const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-      gradient.addColorStop(0, '#121212');
-      gradient.addColorStop(1, '#2a2a2a');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      // Add video title
-      ctx.font = 'bold 24px Arial';
-      ctx.fillStyle = 'white';
-      ctx.textAlign = 'center';
-      ctx.fillText(video.title, canvas.width / 2, canvas.height / 2);
-      
-      // Add crypto mentions
-      ctx.font = '16px Arial';
-      ctx.fillText('Generated with CryptoContentMatic', canvas.width / 2, canvas.height / 2 + 40);
-    }
-    
-    // Convert canvas to blob
-    const blob = await new Promise<Blob>((resolve) => {
-      canvas.toBlob((blob) => {
-        if (blob) {
-          resolve(blob);
-        } else {
-          // Fallback in case toBlob fails
-          resolve(new Blob(['Video content'], { type: 'video/mp4' }));
-        }
-      }, 'video/mp4');
-    });
-    
-    console.log('Video blob created, size:', blob.size);
+    // Create a simpler approach for generating a dummy video file
+    const videoData = new Uint8Array([0, 0, 0, 32, 102, 116, 121, 112, 109, 112, 52, 50]);
+    const blob = new Blob([videoData], { type: 'video/mp4' });
+    console.log('Created video blob with size:', blob.size);
     
     // Create download link
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `${video.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${video.id}.mp4`;
+
+    // This is crucial - append to document, trigger click, and remove
     document.body.appendChild(a);
     a.click();
     
     // Clean up
-    setTimeout(() => {
+    window.setTimeout(() => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       console.log('Download link cleaned up');
@@ -186,3 +154,4 @@ export const downloadVideo = async (video: GeneratedVideo): Promise<boolean> => 
     return false;
   }
 };
+

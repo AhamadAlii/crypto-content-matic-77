@@ -1,7 +1,7 @@
 
 import { NewsArticle } from '@/types';
 
-// Mock data for news articles
+// Fallback mock data in case the API fails
 const MOCK_NEWS_ARTICLES: NewsArticle[] = [
   {
     id: '1',
@@ -71,21 +71,67 @@ const MOCK_NEWS_ARTICLES: NewsArticle[] = [
   }
 ];
 
-// Function to fetch crypto news articles
+// Function to fetch crypto news articles from a real API
 export const fetchCryptoNews = async (): Promise<NewsArticle[]> => {
-  // In a real application, this would make an API call to a news service
-  // For now, we'll use mock data
-  
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  
-  return MOCK_NEWS_ARTICLES;
+  try {
+    console.log('Fetching real-time crypto news...');
+    
+    // Using the free CryptoCompare News API
+    const response = await fetch('https://min-api.cryptocompare.com/data/v2/news/?lang=EN&categories=BTC,ETH,Cryptocurrency,Blockchain');
+    
+    if (!response.ok) {
+      throw new Error(`API responded with status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    if (!data.Data || !Array.isArray(data.Data)) {
+      console.error('Unexpected API response format:', data);
+      throw new Error('Unexpected API response format');
+    }
+    
+    // Map API response to our NewsArticle type
+    const articles: NewsArticle[] = data.Data.map((item: any, index: number) => {
+      // Determine sentiment based on title (simple approach)
+      let sentiment: 'positive' | 'neutral' | 'negative' = 'neutral';
+      const title = item.title.toLowerCase();
+      
+      if (title.includes('surge') || title.includes('gain') || title.includes('rally') || 
+          title.includes('bullish') || title.includes('soar') || title.includes('high')) {
+        sentiment = 'positive';
+      } else if (title.includes('crash') || title.includes('drop') || title.includes('fall') || 
+                title.includes('bearish') || title.includes('plunge') || title.includes('low')) {
+        sentiment = 'negative';
+      }
+      
+      return {
+        id: item.id || `${index}-${Date.now()}`,
+        title: item.title,
+        source: item.source || 'CryptoNews',
+        content: item.body || '',
+        summary: item.title, // Using title as summary since API doesn't provide one
+        url: item.url || '#',
+        imageUrl: item.imageurl || 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+        publishedAt: item.published_on ? new Date(item.published_on * 1000).toISOString() : new Date().toISOString(),
+        sentiment: sentiment
+      };
+    });
+    
+    console.log(`Fetched ${articles.length} real-time news articles`);
+    return articles;
+  } catch (error) {
+    console.error('Error fetching news from API:', error);
+    console.log('Falling back to mock data');
+    
+    // Return mock data as fallback
+    return MOCK_NEWS_ARTICLES;
+  }
 };
 
 // Function to analyze sentiment of news articles
 export const analyzeSentiment = async (article: NewsArticle): Promise<'positive' | 'neutral' | 'negative'> => {
   // In a real application, this would use an NLP API to analyze sentiment
-  // For now, we'll just return the mock sentiment
+  // For now, we'll just return the existing sentiment
   
   // Simulate processing delay
   await new Promise(resolve => setTimeout(resolve, 800));
@@ -96,7 +142,7 @@ export const analyzeSentiment = async (article: NewsArticle): Promise<'positive'
 // Function to summarize an article
 export const summarizeArticle = async (article: NewsArticle): Promise<string> => {
   // In a real application, this would use an AI service to summarize content
-  // For now, we'll just return the mock summary
+  // For now, we'll just return the existing summary
   
   // Simulate processing delay
   await new Promise(resolve => setTimeout(resolve, 1000));
