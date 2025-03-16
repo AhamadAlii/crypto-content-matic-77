@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
@@ -15,6 +15,14 @@ interface VideoPreviewProps {
 const VideoPreview: React.FC<VideoPreviewProps> = ({ video }) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    // Reset video state when video URL changes
+    setIsPlaying(false);
+    setIsVideoLoaded(false);
+  }, [video.videoUrl]);
 
   const handleDownload = async () => {
     setIsDownloading(true);
@@ -50,23 +58,36 @@ const VideoPreview: React.FC<VideoPreviewProps> = ({ video }) => {
   };
 
   const togglePlayPause = () => {
-    const videoElement = document.getElementById('crypto-video') as HTMLVideoElement;
-    if (videoElement) {
-      if (isPlaying) {
-        videoElement.pause();
-      } else {
-        videoElement.play().catch(error => {
+    if (!videoRef.current) return;
+    
+    if (isPlaying) {
+      videoRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      // Check if video can be played
+      if (video.videoUrl && video.videoUrl !== '#') {
+        videoRef.current.play().then(() => {
+          setIsPlaying(true);
+        }).catch(error => {
           console.error('Error playing video:', error);
           toast({
             title: "Playback error",
-            description: "Could not play the video. Please try again.",
+            description: "Could not play the video. Using fallback display.",
             variant: "destructive",
           });
+          setIsPlaying(false);
+        });
+      } else {
+        toast({
+          title: "Playback unavailable",
+          description: "This video cannot be played in the preview.",
         });
       }
-      setIsPlaying(!isPlaying);
     }
   };
+
+  // Determine if we should show the video element or fallback to image
+  const shouldShowVideo = video.videoUrl && video.videoUrl !== '#';
 
   return (
     <div className="bg-black/5 dark:bg-white/5 rounded-lg p-4 relative overflow-hidden">
@@ -75,25 +96,32 @@ const VideoPreview: React.FC<VideoPreviewProps> = ({ video }) => {
       <div className="flex flex-col gap-4">
         {/* Video player */}
         <div className="relative w-full aspect-video bg-black rounded-md overflow-hidden">
-          {video.videoUrl && video.videoUrl !== '#' ? (
+          {shouldShowVideo ? (
             <>
               <video 
+                ref={videoRef}
                 id="crypto-video"
                 className="w-full h-full object-contain"
                 src={video.videoUrl}
                 poster={video.thumbnailUrl}
-                controls={false}
+                preload="metadata"
+                playsInline
+                muted
+                onCanPlay={() => setIsVideoLoaded(true)}
                 onEnded={() => setIsPlaying(false)}
                 onError={(e) => {
                   console.error('Video error:', e);
-                  toast({
-                    title: "Video error",
-                    description: "There was an error loading the video.",
-                    variant: "destructive",
-                  });
+                  setIsVideoLoaded(false);
                 }}
               />
-              <div className="absolute inset-0 flex items-center justify-center">
+              {!isVideoLoaded && (
+                <img 
+                  src={video.thumbnailUrl} 
+                  alt={video.title}
+                  className="absolute inset-0 w-full h-full object-contain z-10"
+                />
+              )}
+              <div className="absolute inset-0 flex items-center justify-center z-20">
                 <Button 
                   onClick={togglePlayPause} 
                   size="icon" 
