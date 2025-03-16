@@ -1,4 +1,3 @@
-
 import { VideoConfig, GeneratedVideo, NewsArticle } from '@/types';
 
 // Function to extract key points from news articles
@@ -44,6 +43,115 @@ const generateVideoSegments = (articles: NewsArticle[], duration: number): any[]
   });
 };
 
+// Creates a simple video for preview purposes
+const createPreviewVideo = async (article: NewsArticle): Promise<string> => {
+  return new Promise((resolve) => {
+    // Create a canvas to draw on
+    const canvas = document.createElement('canvas');
+    canvas.width = 640;
+    canvas.height = 360;
+    const ctx = canvas.getContext('2d');
+    
+    if (!ctx) {
+      console.error('Could not get canvas context');
+      // Return a placeholder video URL if canvas context is not available
+      resolve('/placeholder.svg');
+      return;
+    }
+    
+    // Draw background
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw article image if available
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    
+    img.onload = () => {
+      // Draw the image centered in the canvas
+      const aspectRatio = img.width / img.height;
+      let drawWidth = canvas.width;
+      let drawHeight = canvas.width / aspectRatio;
+      
+      if (drawHeight > canvas.height) {
+        drawHeight = canvas.height;
+        drawWidth = canvas.height * aspectRatio;
+      }
+      
+      const x = (canvas.width - drawWidth) / 2;
+      const y = (canvas.height - drawHeight) / 2;
+      
+      ctx.drawImage(img, x, y, drawWidth, drawHeight);
+      
+      // Add title text
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+      ctx.fillRect(0, canvas.height - 80, canvas.width, 80);
+      
+      ctx.font = 'bold 24px sans-serif';
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      
+      // Wrap text to fit width
+      const words = article.title.split(' ');
+      let line = '';
+      let y = canvas.height - 50;
+      
+      for (let i = 0; i < words.length; i++) {
+        const testLine = line + words[i] + ' ';
+        const metrics = ctx.measureText(testLine);
+        const testWidth = metrics.width;
+        
+        if (testWidth > canvas.width - 40 && i > 0) {
+          ctx.fillText(line, canvas.width / 2, y);
+          line = words[i] + ' ';
+          y += 30;
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line, canvas.width / 2, y);
+      
+      // Convert canvas to video-compatible format
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const videoUrl = URL.createObjectURL(blob);
+          resolve(videoUrl);
+        } else {
+          console.error('Failed to create blob from canvas');
+          resolve('/placeholder.svg');
+        }
+      }, 'image/jpeg');
+    };
+    
+    img.onerror = () => {
+      console.error('Failed to load image:', article.imageUrl);
+      
+      // Draw placeholder content
+      ctx.fillStyle = '#333333';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Add title
+      ctx.font = 'bold 24px sans-serif';
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.fillText('Crypto News', canvas.width / 2, canvas.height / 2 - 50);
+      ctx.fillText(article.title, canvas.width / 2, canvas.height / 2);
+      
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const videoUrl = URL.createObjectURL(blob);
+          resolve(videoUrl);
+        } else {
+          resolve('/placeholder.svg');
+        }
+      }, 'image/jpeg');
+    };
+    
+    // Set the source of the image
+    img.src = article.imageUrl;
+  });
+};
+
 // Function to generate a video from news articles
 export const generateVideo = async (config: VideoConfig): Promise<GeneratedVideo> => {
   // In a real application, this would call a video generation API
@@ -72,13 +180,23 @@ export const generateVideo = async (config: VideoConfig): Promise<GeneratedVideo
   // Generate video segments
   const videoSegments = generateVideoSegments(config.newsArticles, config.duration);
   
+  // Create a preview video URL
+  let videoUrl = '#';
+  if (config.newsArticles.length > 0) {
+    try {
+      videoUrl = await createPreviewVideo(config.newsArticles[0]);
+    } catch (error) {
+      console.error('Error creating preview video:', error);
+    }
+  }
+  
   // Generate a video object
   const video: GeneratedVideo = {
     id: `video-${Date.now()}`,
     title: config.title,
     description: config.description,
     thumbnailUrl: config.newsArticles[0]?.imageUrl || 'https://via.placeholder.com/640x360?text=Crypto+News',
-    videoUrl: '#', // In a real app, this would be a URL to the generated video
+    videoUrl: videoUrl,
     createdAt: new Date().toISOString(),
     duration: config.duration,
     hashtags: uniqueHashtags,
@@ -154,4 +272,3 @@ export const downloadVideo = async (video: GeneratedVideo): Promise<boolean> => 
     return false;
   }
 };
-
