@@ -118,6 +118,8 @@ export const generateThumbnail = async (videoId: string, imageUrl: string): Prom
 // Function to download the generated video
 export const downloadVideo = async (video: GeneratedVideo): Promise<boolean> => {
   try {
+    console.log('Starting download for video:', video.title);
+    
     // In a real application, this would download the actual video file
     // For this demo, we'll create a mock MP4 blob
     
@@ -152,9 +154,16 @@ export const downloadVideo = async (video: GeneratedVideo): Promise<boolean> => 
     // Convert canvas to blob
     const blob = await new Promise<Blob>((resolve) => {
       canvas.toBlob((blob) => {
-        resolve(blob || new Blob(['Video content'], { type: 'video/mp4' }));
-      }, 'image/png');
+        if (blob) {
+          resolve(blob);
+        } else {
+          // Fallback in case toBlob fails
+          resolve(new Blob(['Video content'], { type: 'video/mp4' }));
+        }
+      }, 'video/mp4');
     });
+    
+    console.log('Video blob created, size:', blob.size);
     
     // Create download link
     const url = URL.createObjectURL(blob);
@@ -163,8 +172,13 @@ export const downloadVideo = async (video: GeneratedVideo): Promise<boolean> => 
     a.download = `${video.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${video.id}.mp4`;
     document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    
+    // Clean up
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      console.log('Download link cleaned up');
+    }, 100);
     
     return true;
   } catch (error) {

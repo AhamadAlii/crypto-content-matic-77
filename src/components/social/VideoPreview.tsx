@@ -17,14 +17,19 @@ const VideoPreview: React.FC<VideoPreviewProps> = ({ video }) => {
 
   const handleDownload = async () => {
     setIsDownloading(true);
+    console.log('Starting download process for video:', video.title);
+    
     try {
       const success = await downloadVideo(video);
+      
       if (success) {
+        console.log('Download completed successfully');
         toast({
           title: "Video downloaded",
           description: `${video.title} has been downloaded successfully.`,
         });
       } else {
+        console.log('Download failed');
         toast({
           title: "Download failed",
           description: "There was an error downloading the video. Please try again.",
@@ -32,6 +37,7 @@ const VideoPreview: React.FC<VideoPreviewProps> = ({ video }) => {
         });
       }
     } catch (error) {
+      console.error('Error in handleDownload:', error);
       toast({
         title: "Download error",
         description: "An unexpected error occurred while downloading the video.",
