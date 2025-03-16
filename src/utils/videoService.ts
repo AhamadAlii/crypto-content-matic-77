@@ -78,10 +78,10 @@ const createPreviewVideo = async (article: NewsArticle): Promise<string> => {
         drawWidth = canvas.height * aspectRatio;
       }
       
-      const x = (canvas.width - drawWidth) / 2;
-      const y = (canvas.height - drawHeight) / 2;
+      const imageX = (canvas.width - drawWidth) / 2;
+      const imageY = (canvas.height - drawHeight) / 2;
       
-      ctx.drawImage(img, x, y, drawWidth, drawHeight);
+      ctx.drawImage(img, imageX, imageY, drawWidth, drawHeight);
       
       // Add title text
       ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
@@ -94,7 +94,7 @@ const createPreviewVideo = async (article: NewsArticle): Promise<string> => {
       // Wrap text to fit width
       const words = article.title.split(' ');
       let line = '';
-      let y = canvas.height - 50;
+      let textY = canvas.height - 50;
       
       for (let i = 0; i < words.length; i++) {
         const testLine = line + words[i] + ' ';
@@ -102,14 +102,14 @@ const createPreviewVideo = async (article: NewsArticle): Promise<string> => {
         const testWidth = metrics.width;
         
         if (testWidth > canvas.width - 40 && i > 0) {
-          ctx.fillText(line, canvas.width / 2, y);
+          ctx.fillText(line, canvas.width / 2, textY);
           line = words[i] + ' ';
-          y += 30;
+          textY += 30;
         } else {
           line = testLine;
         }
       }
-      ctx.fillText(line, canvas.width / 2, y);
+      ctx.fillText(line, canvas.width / 2, textY);
       
       // Convert canvas to video-compatible format
       canvas.toBlob((blob) => {
